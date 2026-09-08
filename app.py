@@ -100,6 +100,16 @@ with st.sidebar:
         help="Compensa pequenos deslocamentos da peça em relação à golden. Aumente se a peça se move.",
     )
     st.divider()
+    st.subheader("Visualização")
+    zoom = st.slider(
+        "Zoom (%)",
+        min_value=50,
+        max_value=300,
+        value=100,
+        step=10,
+        help="Aproxima as imagens para conferir detalhes dos LEDs.",
+    )
+    st.divider()
     st.subheader("Inteligência artificial")
     use_llm = st.toggle(
         "Usar análise da LLM",
@@ -202,12 +212,13 @@ default_bounds = (50, 60, 850, 360) if use_demo else (0, 0, image_width, image_h
 preview_step = "1" if use_demo else "3"
 st.subheader(f"{preview_step} · Confira o enquadramento")
 preview_left, preview_right = st.columns(2)
+display_width = int(400 * zoom / 100)
 with preview_left:
     st.caption("Referência golden — peça boa")
-    st.image(reference, width="stretch")
+    st.image(reference, width=display_width)
 with preview_right:
     st.caption("Captura da câmera — peça em inspeção")
-    st.image(candidate, width="stretch")
+    st.image(candidate, width=display_width)
 
 regions_step = "2" if use_demo else "4"
 st.subheader(f"{regions_step} · Delimite a área e confira os LEDs")
@@ -323,7 +334,8 @@ if st.button("Analisar captura", type="primary", icon=":material/search:", width
                 icon=":material/cloud_off:",
             )
 
-    st.image(marked, caption="Vermelho = suspeito · Verde = aprovado", width="stretch")
+    result_display_width = int(700 * zoom / 100)
+    st.image(marked, caption="Vermelho = suspeito · Verde = aprovado", width=result_display_width)
     st.dataframe(result_frame, width="stretch", hide_index=True)
 
     download_left, download_right = st.columns(2)

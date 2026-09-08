@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 from dataclasses import dataclass
 from io import BytesIO
 from typing import Any
@@ -10,6 +11,10 @@ from urllib.parse import urlparse
 from urllib.request import ProxyHandler, Request, build_opener
 
 from PIL import Image
+
+from .logging_config import get_logger
+
+log = get_logger("ollama")
 
 
 DEFAULT_OLLAMA_URL = "http://172.30.40.12:11434"
@@ -50,14 +55,18 @@ def _request_json(url: str, payload: dict[str, Any] | None, timeout: float) -> d
     # Ignora proxies do ambiente para alcançar diretamente o servidor da rede local.
     opener = build_opener(ProxyHandler({}))
     try:
+        log.debug("HTTP %s %s", request.method, url)
         with opener.open(request, timeout=timeout) as response:
             return json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
+        log.error("Ollama HTTP %d: %s", exc.code, detail[:300])
         raise OllamaError(f"Ollama respondeu HTTP {exc.code}: {detail[:300]}") from exc
     except URLError as exc:
+        log.error("Falha conexão Ollama: %s", exc.reason)
         raise OllamaError(f"Não foi possível conectar ao Ollama: {exc.reason}") from exc
     except (TimeoutError, json.JSONDecodeError) as exc:
+        log.error("Timeout ou resposta inválida do Ollama: %s", exc)
         raise OllamaError("O Ollama demorou demais ou devolveu uma resposta inválida.") from exc
 
 
@@ -98,6 +107,7 @@ def analyze_with_vision(
     if not model.strip():
         raise OllamaError("Selecione um modelo de visão.")
 
+    log.info("Enviando para LLM: modelo=%s, %d LEDs locais", model, len(local_results))
     local_summary = json.dumps(local_results, ensure_ascii=False)
     prompt = (
         "INSPEÇÃO DE INTEGRIDADE DO LED\n\n"
@@ -159,8 +169,10 @@ def analyze_with_vision(
         observations = [str(item) for item in parsed.get("observations", [])]
         summary = str(parsed["summary"])
     except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        log.error("Resposta da LLM inválida: %s", exc)
         raise OllamaError("O modelo devolveu um parecer fora do formato esperado.") from exc
 
+    log.info("LLM resposta: verdict=%s, confidence=%.1f%%, suspeitos=%s", verdict, confidence, suspect_leds)
     return LlmInspection(
         verdict=verdict,
         confidence=round(confidence, 1),

@@ -61,6 +61,7 @@ class LedInspectorDesktop(ctk.CTk):
         self.threshold = tk.StringVar(value="22")
         self.max_shift = tk.StringVar(value="15")
         self.fill_ratio = tk.StringVar(value="58")
+        self.zoom = tk.StringVar(value="100")
         self.ollama_url = tk.StringVar(value=DEFAULT_OLLAMA_URL)
         self.ollama_model = tk.StringVar(value=DEFAULT_VISION_MODEL)
         self.use_llm = tk.BooleanVar(value=True)
@@ -143,6 +144,7 @@ class LedInspectorDesktop(ctk.CTk):
         self._entry(sidebar, "Limite de rejeição", self.threshold)
         self._entry(sidebar, "Correção de posição (px)", self.max_shift)
         self._entry(sidebar, "Tamanho da região do LED (%)", self.fill_ratio)
+        self._entry(sidebar, "Zoom (%)", self.zoom)
 
         self._section_title(sidebar, "Ollama")
         ctk.CTkSwitch(
@@ -326,8 +328,8 @@ class LedInspectorDesktop(ctk.CTk):
                 self._set_status("A câmera parou de entregar imagens.")
         self.after(CAMERA_INTERVAL_MS, self._camera_loop)
 
-    @staticmethod
     def _draw_image(
+        self,
         canvas: tk.Canvas,
         image: Image.Image,
         previous_photo: ImageTk.PhotoImage | None,
@@ -336,7 +338,9 @@ class LedInspectorDesktop(ctk.CTk):
         del previous_photo
         canvas_width = max(320, canvas.winfo_width())
         canvas_height = max(240, canvas.winfo_height())
-        scale = min(canvas_width / image.width, canvas_height / image.height)
+        base_scale = min(canvas_width / image.width, canvas_height / image.height)
+        zoom_factor = max(0.5, min(3.0, float(self.zoom.get()) / 100.0))
+        scale = base_scale * zoom_factor
         display_size = (max(1, int(image.width * scale)), max(1, int(image.height * scale)))
         offset_x = (canvas_width - display_size[0]) // 2
         offset_y = (canvas_height - display_size[1]) // 2

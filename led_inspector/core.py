@@ -2,9 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Iterable
+import logging
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+
+from .logging_config import get_logger
+
+log = get_logger("core")
 
 
 @dataclass(frozen=True)
@@ -167,13 +172,15 @@ def inspect_leds(
     max_shift: int = 12,
 ) -> tuple[list[InspectionResult], Image.Image]:
     """Compara LEDs com uma placa boa e devolve resultados e imagem alinhada."""
+    log.info("Iniciando inspeção: %d regiões, threshold=%.1f, max_shift=%dpx", len(list(regions)), threshold, max_shift)
     aligned = align_image(reference, candidate, max_shift=max_shift)
     ref = _rgb_array(reference)
     test = _rgb_array(aligned)
     normalized_test = _normalize_lighting(ref, test)
+    regions_list = list(regions)
     results: list[InspectionResult] = []
 
-    for raw_region in regions:
+    for raw_region in regions_list:
         region = raw_region.validated(reference.size)
         x0, y0 = region.x, region.y
         x1, y1 = x0 + region.width, y0 + region.height
@@ -206,6 +213,11 @@ def inspect_leds(
             status = "OK"
             diagnosis = "sem alteração visual relevante"
 
+        log.debug(
+            "%s: score=%.2f diff=%.2f%% edge=%.2f%% dark=%.2f%% (%s)",
+            region.led_id, score, difference * 100, edge_difference * 100, dark_difference * 100, diagnosis
+        )
+
         results.append(
             InspectionResult(
                 led_id=region.led_id,
@@ -218,6 +230,9 @@ def inspect_leds(
                 region=region,
             )
         )
+
+    suspect_count = sum(1 for r in results if r.status == "SUSPEITO")
+    log.info("Inspeção concluída: %d LEDs, %d suspeitos", len(results), suspect_count)
     return results, aligned
 
 

@@ -10,6 +10,7 @@ from .core import (
     inspect_leds,
     inspect_leds_buffer,
 )
+from .logging_config import get_logger, setup_logging
 from .ollama import (
     DEFAULT_OLLAMA_URL,
     DEFAULT_VISION_MODEL,
@@ -34,4 +35,6 @@ __all__ = [
     "OllamaError",
     "analyze_with_vision",
     "list_vision_models",
+    "setup_logging",
+    "get_logger",
 ]
