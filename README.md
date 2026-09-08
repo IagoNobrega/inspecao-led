@@ -42,7 +42,7 @@ A inspeção e a chamada ao Ollama acontecem em segundo plano. A câmera continu
 
 ## Ollama
 
-O endereço padrão é `http://172.30.40.12:11434` e o modelo recomendado é `qwen3-vl:8b-instruct`.
+O endereço padrão é `` e o modelo recomendado é `qwen3-vl:8b-instruct`.
 
 Use **Conectar e buscar modelos** para carregar os modelos que possuem capacidade de visão. As imagens são enviadas somente ao servidor configurado.
 
