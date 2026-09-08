@@ -17,7 +17,7 @@ from .logging_config import get_logger
 log = get_logger("ollama")
 
 
-DEFAULT_OLLAMA_URL = "http://172.30.40.12:11434"
+DEFAULT_OLLAMA_URL = ""
 DEFAULT_VISION_MODEL = "qwen3-vl:8b-instruct"
 
 
