@@ -1,0 +1,16 @@
+[theme]
+base = "light"
+primaryColor = "#1f725d"
+backgroundColor = "#f7f8f5"
+secondaryBackgroundColor = "#eef2ec"
+textColor = "#18302a"
+font = "sans-serif"
+borderColor = "#d8e0d9"
+redColor = "#c93d4b"
+greenColor = "#17875d"
+baseRadius = "12px"
+showWidgetBorder = true
+showSidebarBorder = true
+
+[server]
+maxUploadSize = 50
